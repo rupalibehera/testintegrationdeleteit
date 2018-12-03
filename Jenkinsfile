@@ -12,7 +12,12 @@ osio {
     def resources = processTemplate(params: [
           release_version: "1.0.${env.BUILD_NUMBER}"
     ])
-    integrationTestCmd = "mvn clean verify -Dnamespace.use.current=false -Dnamespace.use.existing=${utils.usersNamespace()} -Popenshift,openshift-it" 
+    integrationTestCmd = "mvn org.apache.maven.plugins:maven-failsafe-plugin:integration-test \
+            org.apache.maven.plugins:maven-failsafe-plugin:verify \
+            -Dnamespace.use.current=false -Dnamespace.use.existing=${utils.usersNamespace()} \
+            -Dit.test=*IT -DfailIfNoTests=false -DenableImageStreamDetection=true \
+            -P openshift-it"
+    //integrationTestCmd = "mvn clean verify -Dnamespace.use.current=false -Dnamespace.use.existing=${utils.usersNamespace()} -Popenshift,openshift-it" 
     //build resources: resources
     spawn commands: integrationTestCmd, image: 'java'
     
