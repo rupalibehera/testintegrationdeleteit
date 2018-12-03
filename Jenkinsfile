@@ -1,4 +1,4 @@
-@Library('github.com/rupalibehera/osio-pipeline@pod_template') _
+@Library('github.com/fabric8io/osio-pipeline@master') _
 def utils = new io.openshift.Utils()
 
 osio {
