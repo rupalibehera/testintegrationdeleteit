@@ -6,7 +6,7 @@ osio {
   config runtime: 'java', version: '1.8.1'
 
   ci {
-    echo "Running CI build............."
+    echo "Running CI build.............."
 
 
     def resources = processTemplate(params: [
