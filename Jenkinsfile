@@ -15,8 +15,8 @@ osio {
     integrationTestCmd = "mvn verify integration-test -Dnamespace.use.current=false -Dnamespace.use.existing=${utils.usersNamespace()} -Dit.test=*IT -DfailIfNoTests=false -DenableImageStreamDetection=true -Popenshift,openshift-it"
     //integrationTestCmd = "mvn clean verify -Dnamespace.use.current=false -Dnamespace.use.existing=${utils.usersNamespace()} -Popenshift,openshift-it" 
     //build resources: resources
-    spawn commands: integrationTestCmd, image: 'java'
-    //runTest commands: integrationTestCmd, image: 'java'
+    //spawn commands: integrationTestCmd, image: 'java'
+    runTest commands: integrationTestCmd, image: 'java'
     
 
   }
