@@ -6,6 +6,14 @@ metadata:
     description: This template creates a Vert.x application providing health check endpoint to be consumed by Kubernetes.
     tags: instant-app
 parameters:
+- name: SUFFIX_NAME
+  description: The suffix name for the template objects
+  displayName: Suffix name
+  value: ''
+- name: RELEASE_VERSION
+  description: The release version number of application
+  displayName: Release version
+  value: 1.0.0
 - name: SOURCE_REPOSITORY_URL
   description: The source URL for the application
   displayName: Source URL
@@ -28,38 +36,27 @@ parameters:
   generate: expression
 
 objects:
-- apiVersion: v1
+- apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
-    name: health-check-vertx
+    name: health-check-vertx${SUFFIX_NAME}
     labels:
       booster: health-check-vertx
+      version: ${RELEASE_VERSION}
   spec: {}
-
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    name: runtime-health-check-vertx
-    labels:
-      booster: health-check-vertx
-  spec:
-    tags:
-    - name: latest
-      from:
-        kind: DockerImage
-        name: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
 
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: health-check-vertx
+    name: health-check-vertx-s2i${SUFFIX_NAME}
     labels:
       booster: health-check-vertx
+      version: ${RELEASE_VERSION}
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: health-check-vertx:latest
+        name: 'health-check-vertx${SUFFIX_NAME}:${RELEASE_VERSION}'
     source:
       git:
         uri: ${SOURCE_REPOSITORY_URL}
@@ -69,8 +66,8 @@ objects:
     strategy:
       sourceStrategy:
         from:
-          kind: ImageStreamTag
-          name: runtime-health-check-vertx:latest
+          kind: DockerImage
+          name: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
         incremental: true
         env:
         - name: MAVEN_ARGS_APPEND
@@ -83,8 +80,6 @@ objects:
         secret: ${GITHUB_WEBHOOK_SECRET}
       type: GitHub
     - type: ConfigChange
-    - imageChange: {}
-      type: ImageChange
 
 - apiVersion: v1
   kind: Service
@@ -95,7 +90,9 @@ objects:
     labels:
       app: health-check-vertx
       group: io.openshift.booster
-    name: health-check-vertx
+      version: ${RELEASE_VERSION}
+      expose: 'true'
+    name: health-check-vertx${SUFFIX_NAME}
   spec:
     ports:
     - name: http
@@ -112,17 +109,19 @@ objects:
     labels:
       app: health-check-vertx
       group: io.openshift.booster
-    name: health-check-vertx
+    name: health-check-vertx${SUFFIX_NAME}
   spec:
     replicas: 1
     selector:
       app: health-check-vertx
       group: io.openshift.booster
+      version: ${RELEASE_VERSION}
     template:
       metadata:
         labels:
           app: health-check-vertx
           group: io.openshift.booster
+          version: ${RELEASE_VERSION}
       spec:
         containers:
         - env:
@@ -130,7 +129,7 @@ objects:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          image: health-check-vertx:master
+          image: ""
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 1
@@ -170,7 +169,7 @@ objects:
           - vertx
         from:
           kind: ImageStreamTag
-          name: health-check-vertx:latest
+          name: 'health-check-vertx${SUFFIX_NAME}:${RELEASE_VERSION}'
 
 - apiVersion: route.openshift.io/v1
   kind: Route
@@ -178,10 +177,11 @@ objects:
     labels:
       app: health-check-vertx
       group: io.openshift.booster
-    name: health-check-vertx
+      version: ${RELEASE_VERSION}
+    name: health-check-vertx${SUFFIX_NAME}
   spec:
     port:
       targetPort: 8080
     to:
       kind: Service
-      name: health-check-vertx
+      name: health-check-vertx${SUFFIX_NAME}
