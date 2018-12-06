@@ -3,7 +3,7 @@ def utils = new io.openshift.Utils()
 
 osio {
 
-  config runtime: 'java', version: '1.8.1'
+  config runtime: 'java', version: '1.8'
 
   ci {
     echo "Running CI build........................."
